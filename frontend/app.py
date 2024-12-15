@@ -15,6 +15,8 @@ from backend.preprocessing.preprocessing_enums import DIFFICULTY_MAP, COOKING_ME
 from streamlit_lottie import st_lottie
 import json
 import os
+from PIL import Image
+from io import BytesIO
 
 # Set environment variables
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
@@ -124,10 +126,27 @@ if __name__ == "__main__":
 
         if st.session_state['image_files']:
             for image_file in st.session_state['image_files']:
-                # Convert UploadedFile to bytes
-                image_bytes = image_file.getvalue()
-                base64_bytes = base64.b64encode(image_bytes).decode('utf-8')
-                st.image(image_file, caption='Uploaded image(s)')
+                # Open image with PIL
+                img = Image.open(image_file)
+                
+                # Calculate new height maintaining aspect ratio
+                target_width = 1024
+                aspect_ratio = img.size[1] / img.size[0]
+                target_height = int(target_width * aspect_ratio)
+                
+                # Resize image
+                im = img.resize((target_width, target_height), Image.Resampling.LANCZOS)
+                
+                # Convert to RGB mode if necessary
+                if im.mode in ('RGBA', 'LA') or (im.mode == 'P' and 'transparency' in im.info):
+                    im = im.convert('RGB')
+                
+                # Save resized image to buffer
+                buffered = BytesIO()
+                im.save(buffered, format="JPEG", quality=100)  # Using JPEG format
+                base64_bytes = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+                st.image(image_file, caption='Uploaded image(s)', width=400)
                 st.session_state['image_message'].content.append(
                         {
                             "type": "image_url",
