@@ -1,0 +1,50 @@
+# Dockerfile for building a Docker image to deploy a Python application using Poetry for dependency management.
+# This Dockerfile sets up a multi-stage build process. It installs Poetry to manage Python dependencies and sets up the application environment.
+# The version of poetry to install, directory where Poetry will be installed and Python version to use for the base image.
+ARG POETRY_VERSION=1.8.3
+ARG POETRY_HOME=/opt/poetry 
+ARG PYTHON_VERSION=3.11.9
+
+FROM python:${PYTHON_VERSION}-slim AS base
+ARG POETRY_VERSION\
+    POETRY_HOME
+    
+# Prevents Python bytecode files from being written to disk
+# Ensures that python putputs are sent straight to terminal without buffering.
+# Enables the python fault handler
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONFAULTHANDLER=1
+
+# Disables interaction mode for poetry.
+ENV POETRY_HOME=${POETRY_HOME}\
+    POETRY_NO_INTERACTION=1
+
+# Install any image specific requirements, such as curl and the ssh client
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc curl && \
+    curl -sSL https://install.python-poetry.org | POETRY_HOME=${POETRY_HOME} python3 - --version ${POETRY_VERSION}
+
+# Add Poetry bin to PATH    
+ENV PATH="${POETRY_HOME}/bin:$PATH"
+
+# Set working directory and expose port.
+WORKDIR /app
+EXPOSE 8000
+# Copy application code to the container.
+COPY . /app
+
+
+# Configure Poetry to not create virtual environment, add --mount=type=ssh to commands that require SSH
+RUN poetry config virtualenvs.create false && \
+    poetry config virtualenvs.in-project false
+RUN --mount=type=ssh poetry install --no-root
+RUN --mount=type=ssh poetry install --only-root
+
+# Set working directory, Expose port and copy application code
+WORKDIR /app
+EXPOSE 8000
+COPY . /app
+
+# Entrypoint for the application
+ENTRYPOINT ["streamlit", "run", "frontend/app.py", "--server.port=8000", "--server.address=0.0.0.0"]

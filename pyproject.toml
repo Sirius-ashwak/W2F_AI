@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "savour"
+version = "0.1.0"
+description = ""
+authors = ["KenichiNakanishi <knakanishi@woolworths.com.au>"]
+readme = "README.md"
+packages = [{ include = "backend", from = "." }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+praw = "^7.8.1"
+pandas = "^2.2.3"
+langchain-google-vertexai = "^2.0.8"
+python-dotenv = "^1.0.1"
+loguru = "^0.7.2"
+langgraph = "^0.2.56"
+langchain = "^0.3.9"
+langchain-core = "^0.3.21"
+anthropic = {extras = ["vertex"], version = "^0.39.0"}
+langchain-community = "^0.3.3"
+langchainhub = "^0.1.21"
+streamlit = "^1.40.2"
+tiktoken = "^0.8.0"
+sentencepiece = "^0.2.0"
+pymongo = "^4.10.1"
+langchain-mongodb = "^0.2.0"
+streamlit-lottie = "^0.0.5"
+langsmith = "^0.2.3"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
